@@ -21,8 +21,15 @@
 
     async function setupCamera() {
       const video = document.getElementById('video');
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        await new Promise(resolve => {
+          video.onloadedmetadata = () => resolve();
+        });
+      } catch (error) {
+        alert('Error accessing camera: ' + error.message);
+      }
     }
 
     function captureAndRecognize() {
