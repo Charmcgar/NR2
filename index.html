@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Number Info Scanner</title>
+  <script src="https://js.puter.com/v2/"></script>
+</head>
+<body>
+  <h1>Scan a Number</h1>
+  <video id="video" width="640" height="480" autoplay></video><br>
+  <button onclick="captureAndRecognize()">Capture and Recognize</button>
+  <div id="result" style="margin-top: 20px;"></div>
+
+  <script>
+    const numberInfo = {
+      '123': 'Hello',
+      '456': 'Goodbye',
+      '789': 'Welcome'
+    };
+
+    async function setupCamera() {
+      const video = document.getElementById('video');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+    }
+
+    function captureAndRecognize() {
+      const video = document.getElementById('video');
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageDataUrl = canvas.toDataURL('image/png');
+      recognizeText(imageDataUrl);
+    }
+
+    async function recognizeText(imageDataUrl) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = 'Processing image...';
+
+      try {
+        const text = await puter.ai.img2txt(imageDataUrl);
+        resultDiv.textContent = text || 'No text found in image';
+        displayInfo(text.trim());
+      } catch (error) {
+        resultDiv.textContent = 'Error: ' + error.message;
+      }
+    }
+
+    function displayInfo(number) {
+      const info = numberInfo[number];
+      const resultDiv = document.getElementById('result');
+      if (info) {
+        resultDiv.textContent = `Info: ${info}`;
+      } else {
+        resultDiv.textContent = 'No information found for this number.';
+      }
+    }
+
+    window.onload = setupCamera;
+  </script>
+</body>
+</html>
