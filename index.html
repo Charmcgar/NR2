@@ -13,12 +13,6 @@
   <div id="result" style="margin-top: 20px;"></div>
 
   <script>
-    const numberInfo = {
-      '123': 'Hello',
-      '456': 'Goodbye',
-      '789': 'Welcome'
-    };
-
     async function setupCamera() {
       const video = document.getElementById('video');
       try {
@@ -48,27 +42,46 @@
       resultDiv.textContent = 'Processing image...';
 
       try {
+        // Use Tesseract to extract text
         const { data: { text } } = await Tesseract.recognize(
           imageDataUrl,
           'eng',
           {
-            logger: (m) => console.log(m) // You can monitor progress in the console
+            logger: (m) => console.log(m)
           }
         );
-        resultDiv.textContent = text.trim() || 'No text found in image';
-        displayInfo(text.trim());
+        const recognizedText = text.trim();
+        resultDiv.textContent = recognizedText || 'No text found in image';
+
+        // Send recognized text to Zapier via Webhook
+        sendToZapier(recognizedText);
+
       } catch (error) {
         resultDiv.textContent = 'Error: ' + error.message;
       }
     }
 
-    function displayInfo(number) {
-      const info = numberInfo[number];
+    async function sendToZapier(number) {
       const resultDiv = document.getElementById('result');
-      if (info) {
-        resultDiv.textContent = `Info: ${info}`;
-      } else {
-        resultDiv.textContent = 'No information found for this number.';
+      const zapierUrl = 'https://hooks.zapier.com/hooks/catch/your_zapier_webhook_url/';  // Replace with your Zapier URL
+
+      try {
+        const response = await fetch(zapierUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ number })
+        });
+
+        const data = await response.json();
+        if (data.info) {
+          resultDiv.textContent = `Info: ${data.info}`;
+        } else {
+          resultDiv.textContent = 'No information found for this number.';
+        }
+      } catch (error) {
+        resultDiv.textContent = 'Error sending data to Zapier: ' + error.message;
       }
     }
 
@@ -76,4 +89,3 @@
   </script>
 </body>
 </html>
-
