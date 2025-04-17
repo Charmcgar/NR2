@@ -13,7 +13,7 @@
   <div id="result" style="margin-top: 20px;"></div>
 
   <script>
-    // Local "database" in JSON format (you can replace this with loading a file)
+    // Local "database" in JSON format
     const database = [
       { "number": "123", "info": "Hello" },
       { "number": "456", "info": "Goodbye" },
@@ -57,8 +57,8 @@
           logger: (m) => console.log(m) // Log progress for debugging
         });
 
-        // Show recognized text and lookup information
-        resultDiv.textContent = `Recognized Text: ${text}`;
+        // Show recognized text (number) and lookup information
+        resultDiv.textContent = `Recognized Number: ${text.trim()}`;
         displayInfo(text.trim());
       } catch (error) {
         resultDiv.textContent = 'Error: ' + error.message;
@@ -70,9 +70,9 @@
       const info = lookupInfo(number);
       const resultDiv = document.getElementById('result');
       if (info) {
-        resultDiv.textContent = `Info: ${info}`;
+        resultDiv.textContent += ` | Info: ${info}`;
       } else {
-        resultDiv.textContent = 'No information found for this number.';
+        resultDiv.textContent += ' | No information found for this number.';
       }
     }
 
