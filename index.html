@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Number Info Scanner</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
 </head>
 <body>
   <h1>Scan a Number</h1>
@@ -13,6 +13,14 @@
   <div id="result" style="margin-top: 20px;"></div>
 
   <script>
+    // Local "database" in JSON format (you can replace this with loading a file)
+    const database = [
+      { "number": "123", "info": "Hello" },
+      { "number": "456", "info": "Goodbye" },
+      { "number": "789", "info": "Welcome" }
+    ];
+
+    // Setup the camera
     async function setupCamera() {
       const video = document.getElementById('video');
       try {
@@ -26,6 +34,7 @@
       }
     }
 
+    // Capture the current frame and recognize text
     function captureAndRecognize() {
       const video = document.getElementById('video');
       const canvas = document.createElement('canvas');
@@ -37,54 +46,44 @@
       recognizeText(imageDataUrl);
     }
 
+    // Recognize text using Tesseract.js
     async function recognizeText(imageDataUrl) {
       const resultDiv = document.getElementById('result');
       resultDiv.textContent = 'Processing image...';
 
       try {
-        // Use Tesseract to extract text
-        const { data: { text } } = await Tesseract.recognize(
-          imageDataUrl,
-          'eng',
-          {
-            logger: (m) => console.log(m)
-          }
-        );
-        const recognizedText = text.trim();
-        resultDiv.textContent = recognizedText || 'No text found in image';
+        // Use Tesseract.js to recognize text from the captured image
+        const { data: { text } } = await Tesseract.recognize(imageDataUrl, 'eng', {
+          logger: (m) => console.log(m) // Log progress for debugging
+        });
 
-        // Send recognized text to Zapier via Webhook
-        sendToZapier(recognizedText);
-
+        // Show recognized text and lookup information
+        resultDiv.textContent = `Recognized Text: ${text}`;
+        displayInfo(text.trim());
       } catch (error) {
         resultDiv.textContent = 'Error: ' + error.message;
       }
     }
 
-    async function sendToZapier(number) {
+    // Lookup the recognized number in the database
+    function displayInfo(number) {
+      const info = lookupInfo(number);
       const resultDiv = document.getElementById('result');
-      const zapierUrl = 'https://hooks.zapier.com/hooks/catch/your_zapier_webhook_url/';  // Replace with your Zapier URL
-
-      try {
-        const response = await fetch(zapierUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ number })
-        });
-
-        const data = await response.json();
-        if (data.info) {
-          resultDiv.textContent = `Info: ${data.info}`;
-        } else {
-          resultDiv.textContent = 'No information found for this number.';
-        }
-      } catch (error) {
-        resultDiv.textContent = 'Error sending data to Zapier: ' + error.message;
+      if (info) {
+        resultDiv.textContent = `Info: ${info}`;
+      } else {
+        resultDiv.textContent = 'No information found for this number.';
       }
     }
 
+    // Search the "database" for the number
+    function lookupInfo(number) {
+      // Search the database for the number
+      const entry = database.find(item => item.number === number);
+      return entry ? entry.info : null;
+    }
+
+    // Initialize the camera when the page loads
     window.onload = setupCamera;
   </script>
 </body>
